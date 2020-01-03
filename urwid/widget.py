@@ -59,6 +59,7 @@ BOTTOM = 'bottom'
 SPACE = 'space'
 ANY = 'any'
 CLIP = 'clip'
+ELLIPSIS = 'ellipsis'
 
 # Width and Height settings
 PACK = 'pack'
@@ -813,7 +814,7 @@ class Text(Widget):
         :type markup: :ref:`text-markup`
         :param align: typically ``'left'``, ``'center'`` or ``'right'``
         :type align: text alignment mode
-        :param wrap: typically ``'space'``, ``'any'`` or ``'clip'``
+        :param wrap: typically ``'space'``, ``'any'``, ``'clip'`` or ``'ellipsis'``
         :type wrap: text wrapping mode
         :param layout: defaults to a shared :class:`StandardTextLayout` instance
         :type layout: text layout instance
@@ -937,7 +938,7 @@ class Text(Widget):
         Set text wrapping mode. Supported modes depend on text layout
         object in use but defaults to a :class:`StandardTextLayout` instance
 
-        :param mode: typically ``'space'``, ``'any'`` or ``'clip'``
+        :param mode: typically ``'space'``, ``'any'``, ``'clip'`` or ``'ellipsis'``
         :type mode: text wrapping mode
 
         >>> t = Text(u"some words")
@@ -966,7 +967,7 @@ class Text(Widget):
         the same time.
 
         :type align: text alignment mode
-        :param wrap: typically 'space', 'any' or 'clip'
+        :param wrap: typically 'space', 'any', 'clip' or 'ellipsis'
         :type wrap: text wrapping mode
         :param layout: defaults to a shared :class:`StandardTextLayout` instance
         :type layout: text layout instance
@@ -1106,6 +1107,8 @@ class Edit(Text):
       handler to guard against this case (for instance, by not changing the
       text if it is signaled for for text that it has already changed once).
     """
+    _selectable = True
+    ignore_focus = False
     # (this variable is picked up by the MetaSignals metaclass)
     signals = ["change", "postchange"]
 
@@ -1119,8 +1122,6 @@ class Edit(Text):
         This implementation returns True for all printable characters.
         """
         return is_wide_char(ch,0) or (len(ch)==1 and ord(ch) >= 32)
-
-    def selectable(self): return True
 
     def __init__(self, caption=u"", edit_text=u"", multiline=False,
             align=LEFT, wrap=SPACE, allow_tab=False,

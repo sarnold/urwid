@@ -34,6 +34,7 @@ from urwid.decoration import WidgetDecoration
 from urwid.command_map import ACTIVATE
 
 class SelectableIcon(Text):
+    ignore_focus = False
     _selectable = True
     def __init__(self, text, cursor_position=0):
         """
@@ -114,7 +115,7 @@ class CheckBox(WidgetWrap):
     signals = ["change", 'postchange']
 
     def __init__(self, label, state=False, has_mixed=False,
-             on_state_change=None, user_data=None):
+             on_state_change=None, user_data=None, checked_symbol=None):
         """
         :param label: markup for check box label
         :param state: False, True or "mixed"
@@ -148,6 +149,8 @@ class CheckBox(WidgetWrap):
         self._label = Text("")
         self.has_mixed = has_mixed
         self._state = None
+        if checked_symbol:
+            self.states[True] = SelectableIcon(u"[%s]" % checked_symbol, 1)
         # The old way of listening for a change was to pass the callback
         # in to the constructor.  Just convert it to the new way:
         if on_state_change:

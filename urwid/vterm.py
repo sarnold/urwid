@@ -1319,6 +1319,7 @@ class TermCanvas(Canvas):
             return [self.cols()]*self.rows()
         return self.content()
 
+
 class Terminal(Widget):
     _selectable = True
     _sizing = frozenset([BOX])
@@ -1326,48 +1327,45 @@ class Terminal(Widget):
     signals = ['closed', 'beep', 'leds', 'title']
 
     def __init__(self, command, env=None, main_loop=None, escape_sequence=None,
-                 encoding='ascii'):
+                 encoding='utf-8'):
         """
         A terminal emulator within a widget.
 
-        'command' is the command to execute inside the terminal, provided as a
+        ``command`` is the command to execute inside the terminal, provided as a
         list of the command followed by its arguments.  If 'command' is None,
         the command is the current user's shell. You can also provide a callable
         instead of a command, which will be executed in the subprocess.
 
-        'env' can be used to pass custom environment variables. If omitted,
+        ``env`` can be used to pass custom environment variables. If omitted,
         os.environ is used.
 
-        'main_loop' should be provided, because the canvas state machine needs
+        ``main_loop`` should be provided, because the canvas state machine needs
         to act on input from the PTY master device. This object must have
         watch_file and remove_watch_file methods.
 
-        'escape_sequence' is the urwid key symbol which should be used to break
-        out of the terminal widget. If it's not specified, "ctrl a" is used.
+        ``escape_sequence`` is the urwid key symbol which should be used to break
+        out of the terminal widget. If it's not specified, ``ctrl a`` is used.
 
-        'encoding' specifies the encoding that is being used when local
-        keypresses in Unicode are encoded into raw bytes. The default encoding
-        is 'ascii' for backwards compatibility with urwid versions <= 2.0.1.
-        Set this to the encoding of your terminal (typically 'utf8') if you
-        want to be able to transmit non-ASCII characters to the spawned process.
+        ``encoding`` specifies the encoding that is being used when local
+        keypresses in Unicode are encoded into raw bytes. UTF-8 is used by default.
+        Set this to the encoding of your terminal if you need to transmit
+        characters to the spawned process in non-UTF8 encoding.
         Applies to Python 3.x only.
+
+        .. note::
+
+            If you notice your Terminal instance is not printing unicode glyphs
+            correctly, make sure the global encoding for urwid is set to
+            ``utf8`` with ``urwid.set_encoding("utf8")``. See
+            :ref:`text-encodings` for more details.
         """
-        self.__super.__init__()
+        Widget.__init__(self)
 
-        if escape_sequence is None:
-            self.escape_sequence = "ctrl a"
-        else:
-            self.escape_sequence = escape_sequence
+        self.escape_sequence = escape_sequence or "ctrl a"
 
-        if env is None:
-            self.env = dict(os.environ)
-        else:
-            self.env = dict(env)
+        self.env = dict(env or os.environ)
 
-        if command is None:
-            self.command = [self.env.get('SHELL', '/bin/sh')]
-        else:
-            self.command = command
+        self.command = command or [self.env.get('SHELL', '/bin/sh')]
 
         self.encoding = encoding
 
@@ -1518,17 +1516,12 @@ class Terminal(Widget):
     def add_watch(self):
         if self.main_loop is None:
             return
-
         self.main_loop.watch_file(self.master, self.feed)
 
     def remove_watch(self):
         if self.main_loop is None:
             return
-
         self.main_loop.remove_watch_file(self.master)
-
-    def selectable(self):
-        return True
 
     def wait_and_feed(self, timeout=1.0):
         while True:
@@ -1546,14 +1539,14 @@ class Terminal(Widget):
         try:
             data = os.read(self.master, 4096)
         except OSError as e:
-            if e.errno == 5: # End Of File
+            if e.errno == 5: # EIO, child terminated
                 data = EOF
             elif e.errno == errno.EWOULDBLOCK: # empty buffer
                 return
             else:
                 raise
 
-        if data == EOF: # EOF on BSD
+        if data == EOF:
             self.terminate()
             self._emit('closed')
             return
