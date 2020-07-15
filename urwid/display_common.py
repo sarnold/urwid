@@ -386,6 +386,20 @@ def _parse_color_256(desc):
     except ValueError:
         return None
 
+
+def _true_to_256(desc):
+
+    if  not (desc.startswith('#') and len(desc) == 7):
+        return None
+
+    c256 = _parse_color_256("#" + "".join([
+        format(int(x, 16)//16, "x")
+        for x in [desc[1:3], desc[3:5], desc[5:7] ]
+    ]
+    ))
+    return _color_desc_256(c256)
+
+
 def _parse_color_88(desc):
     """
     Return a color number for the description desc.
@@ -616,7 +630,7 @@ class AttrSpec(object):
                 scolor = _parse_color_true(part)
                 flags |= _FG_TRUE_COLOR
             else:
-                scolor = _parse_color_256(part)
+                scolor = _parse_color_256(_true_to_256(part) or part)
                 flags |= _FG_HIGH_COLOR
             # _parse_color_*() return None for unrecognised colors
             if scolor is None:
@@ -658,7 +672,7 @@ class AttrSpec(object):
             color = _parse_color_true(background)
             flags |= _BG_TRUE_COLOR
         else:
-            color = _parse_color_256(background)
+            color = _parse_color_256(_true_to_256(background) or background)
             flags |= _BG_HIGH_COLOR
         if color is None:
             raise AttrSpecError(("Unrecognised color specification " +
@@ -795,8 +809,8 @@ class BaseScreen(with_metaclass(signals.MetaSignals, object)):
         :meth:`_start`.
         """
         if not self._started:
+            self._started = True
             self._start(*args, **kwargs)
-        self._started = True
         return StoppingContext(self)
 
     def _start(self):
@@ -920,6 +934,8 @@ class BaseScreen(with_metaclass(signals.MetaSignals, object)):
             foreground_high = foreground
         if background_high is None:
             background_high = background
+
+        high_256 = AttrSpec(foreground_high, background_high, 256)
         high_true = AttrSpec(foreground_high, background_high, 2**24)
 
         # 'hX' where X > 15 are different in 88/256 color, use
@@ -938,8 +954,8 @@ class BaseScreen(with_metaclass(signals.MetaSignals, object)):
             high_88 = AttrSpec(foreground_high, background_high, 88)
 
         signals.emit_signal(self, UPDATE_PALETTE_ENTRY,
-                            name, basic, mono, high_88, high_true)
-        self._palette[name] = (basic, mono, high_88, high_true)
+                            name, basic, mono, high_88, high_256, high_true)
+        self._palette[name] = (basic, mono, high_88, high_256, high_true)
 
 
 def _test():
