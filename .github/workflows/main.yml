@@ -66,4 +66,4 @@ jobs:
           name: wheels
 
       - name: Check number of downloaded artifacts
-        run: .github/workflows/wheel-check.sh 16
+        run: .github/workflows/wheel-check.sh 24

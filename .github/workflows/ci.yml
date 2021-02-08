@@ -15,7 +15,7 @@ jobs:
       PYTHON: ${{ matrix.python-version }}
       PIP_DOWNLOAD_CACHE: ${{ github.workspace }}/../.pip_download_cache
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         os: [ubuntu-20.04, macos-latest]
         python-version: [3.6, 3.7, 3.8, 3.9]
@@ -52,38 +52,3 @@ jobs:
     - name: Build sdist/wheel
       run: |
         tox -e build
-
-  msys2:
-    runs-on: windows-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-
-    - name: setup-msys2
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: MINGW64
-        update: true
-        install: >-
-          git
-          mingw-w64-x86_64-gtk3
-          mingw-w64-x86_64-python
-          mingw-w64-x86_64-python-gobject
-          mingw-w64-x86_64-python-pip
-          mingw-w64-x86_64-python-certifi
-          mingw-w64-x86_64-python-coverage
-          mingw-w64-x86_64-python-entrypoints
-          mingw-w64-x86_64-python-toml
-
-    - name: Install additional dependencies
-      shell: msys2 {0}
-      run: |
-        pip3 install -rrequirements.txt
-
-    - name: Run tests
-      shell: msys2 {0}
-      run: |
-        MSYSTEM= coverage run setup.py test
-        MSYSTEM= coverage report
