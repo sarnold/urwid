@@ -48,9 +48,13 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
+          name: cibw-wheels
           path: ./wheelhouse/*.whl
 
   check_artifacts:
+    defaults:
+      run:
+        shell: bash
     name: Check artifacts are correct
     needs: [cibw_wheels]
     runs-on: ubuntu-20.04
@@ -58,7 +62,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/download-artifact@v2
 
+      # note wheels should be in subdirectory <upload_name>
       - name: Check number of downloaded artifacts
         run: |
-          ls -al artifact
-        # .github/workflows/wheel-check.sh 24
+          .github/workflows/wheel-check.sh 52
