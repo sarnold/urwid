@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  python_wheels:
+  unix:
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -43,7 +43,6 @@ jobs:
     - name: Add python requirements
       run: |
         python -m pip install --upgrade pip
-        python -m pip install PyGObject pycairo
         pip install tox tox-gh-actions
 
     - name: Run tests
@@ -53,3 +52,40 @@ jobs:
     - name: Build sdist/wheel
       run: |
         tox -e build
+
+  msys2:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: setup-msys2
+      if: runner.os == 'Windows'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        update: true
+        install: >-
+          git
+          mingw-w64-x86_64-gtk3
+          mingw-w64-x86_64-python
+          mingw-w64-x86_64-python-gobject
+          mingw-w64-x86_64-python-pip
+          mingw-w64-x86_64-python-certifi
+          mingw-w64-x86_64-python-coverage
+          mingw-w64-x86_64-python-entrypoints
+          mingw-w64-x86_64-python-toml
+
+    - name: Install additional dependencies
+      if: runner.os == 'Windows'
+      shell: msys2 {0}
+      run: |
+        pip3 install tornado<5.0.0 coverage twisted trio==0.17.0 PyGObject
+
+    - name: Run tests
+      shell: msys2 {0}
+      run: |
+        MSYSTEM= coverage run setup.py test
+        MSYSTEM= coverage report
