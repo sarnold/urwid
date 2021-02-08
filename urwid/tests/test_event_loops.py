@@ -103,7 +103,7 @@ else:
 
 
 try:
-    import tornado_broken
+    import tornado
 except ImportError:
     pass
 else:

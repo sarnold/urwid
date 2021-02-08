@@ -2,7 +2,7 @@ name: Wheels
 
 on:
   workflow_dispatch:
-  pull_request:
+  #pull_request:
 
 jobs:
   build-sdist:
@@ -95,4 +95,3 @@ jobs:
           name: packages_linux_aarch64
           path: |
             dist/*-manylinux2014_aarch64.whl
-
