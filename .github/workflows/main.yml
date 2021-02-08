@@ -1,15 +1,15 @@
-name: Build
+name: Wheels
 
 on:
   workflow_dispatch:
-  #pull_request:
-  #push:
-    #branches:
-      #- master
+  pull_request:
+  push:
+    branches:
+      - master
 
 jobs:
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+  cibw_wheels:
+    name: Build wheels on ${{ matrix.os }} for Python
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -42,57 +42,27 @@ jobs:
           CIBW_MANYLINUX_I686_IMAGE: quay.io/pypa/manylinux2010_i686:latest
           CIBW_BUILD: cp36-* cp37-* cp38-* cp39-*
           CIBW_SKIP: "*-win32"
-          CIBW_BEFORE_ALL_LINUX: >
-            yum -y -q --enablerepo=extras install epel-release
-            && yum install -y gobject-introspection-devel python-gobject, python-gobject-base
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "auditwheel show {wheel} && auditwheel repair -w {dest_dir} {wheel}"
-          CIBW_BEFORE_ALL_MACOS: >
-            brew install gtk+3 gobject-introspection gtk-mac-integration
           CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=10.09
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: "pip uninstall -y delocate && pip install git+https://github.com/Chia-Network/delocate.git && delocate-listdeps {wheel} && delocate-wheel -w {dest_dir} -v {wheel}"
-          CIBW_TEST_COMMAND: python --version
+          CIBW_TEST_COMMAND: python -c "import urwid.tests"
         run: |
           python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions/upload-artifact@v2
         with:
+          name: wheels
           path: ./wheelhouse/*.whl
 
-  build_sdist:
-    name: Build source distribution
-    runs-on: ubuntu-latest
+  check_artifacts:
+    name: Check artifacts are correct
+    needs: [cibw_wheels]
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-
-      - uses: actions/setup-python@v2
-        name: Install Python
-        with:
-          python-version: '3.7'
-
-      - name: Build sdist
-        run: |
-          pip install pep517
-          python -m pep517.build -s .
-
-      - uses: actions/upload-artifact@v2
-        with:
-          path: dist/*.tar.gz
-
-  upload_pypi:
-    needs: [build_wheels, build_sdist]
-    runs-on: ubuntu-latest
-    # upload to PyPI on every tag starting with 'v'
-    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-    # alternatively, to publish when a GitHub Release is created, use the following rule:
-    # if: github.event_name == 'release' && github.event.action == 'published'
-    steps:
       - uses: actions/download-artifact@v2
         with:
-          name: artifact
-          path: dist
+          name: wheels
 
-      - uses: pypa/gh-action-pypi-publish@master
-        with:
-          user: __token__
-          password: ${{ secrets.pypi_password }}
-
+      - name: Check number of downloaded artifacts
+        run: .github/workflows/wheel-check.sh 16
