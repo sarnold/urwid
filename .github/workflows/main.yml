@@ -9,55 +9,42 @@ on:
 
 jobs:
   cibw_wheels:
-    name: Build ${{ matrix.build }} wheels on ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          - os: ubuntu-18.04
-            build: "*x86_64* *i686*"
-          - os: ubuntu-18.04
-            build: "*aarch64*"
-          - os: ubuntu-18.04
-            build: "*ppc64le*"
-          - os: ubuntu-18.04
-            build: "*s390x*"
-          - os: windows-2019
-            build: "*win_amd64*"
-          - os: windows-2019
-            build: "*win32*"
-          - os: macos-10.15
-            build: "*x86_64* *arm64*"
+        os: [ubuntu-20.04, windows-2019, macos-10.15]
 
     steps:
-      - name: Set git to use LF
-        run: |
-          git config --global core.autocrlf false
-          git config --global core.eol lf
-
       - uses: actions/checkout@v2
         with:
-          submodules: recursive
+          fetch-depth: 0
 
-      - name: Install Python
-        uses: actions/setup-python@v2
+      - uses: actions/setup-python@v2
+        name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.7'
+
+      - name: Install Visual C++ for Python 2.7
+        if: runner.os == 'Windows'
+        run: choco install vcpython27 -f -y
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1.0.1
         if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
 
       - name: Build wheels
-        uses: joerick/cibuildwheel@5514dd28f0e6ab8f584981a98ff86c60b77466ed
+        uses: joerick/cibuildwheel@v1.9.0
         env:
+          # configure cibuildwheel to build native archs ('auto'), and some
+          # emulated ones; remove the cp27 from SKIP to enable py27 wheels
+          # (note this takes a long time even without py27)
+          CIBW_ARCHS_LINUX: auto aarch64 ppc64le s390x
+          CIBW_ARCHS_MACOS: x86_64 arm64
+          CIBW_SKIP: "cp27-* cp34-* pp27-* *-win32"
           CIBW_TEST_COMMAND: python -c "import urwid.tests"
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
-          CIBW_MANYLINUX_I686_IMAGE: manylinux2014
-          CIBW_ARCHS_LINUX: "x86_64 i686 aarch64 ppc64le s390x"
-          CIBW_ARCHS_MACOS: "x86_64 arm64"
-          CIBW_SKIP: "cp27-* cp35-* *-win32"
-          CIBW_BUILD: "${{ matrix.build }}"
 
       - uses: actions/upload-artifact@v2
         with:
@@ -73,6 +60,5 @@ jobs:
 
       - name: Check number of downloaded artifacts
         run: |
-          ls -al
-          find . -name \*.whl | wc -w
+          ls -al artifact
         # .github/workflows/wheel-check.sh 24
