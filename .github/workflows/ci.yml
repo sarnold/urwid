@@ -62,7 +62,6 @@ jobs:
         fetch-depth: 0
 
     - name: setup-msys2
-      if: runner.os == 'Windows'
       uses: msys2/setup-msys2@v2
       with:
         msystem: MINGW64
@@ -79,10 +78,9 @@ jobs:
           mingw-w64-x86_64-python-toml
 
     - name: Install additional dependencies
-      if: runner.os == 'Windows'
       shell: msys2 {0}
       run: |
-        pip3 install tornado<5.0.0 coverage twisted trio==0.17.0 PyGObject
+        pip3 install -rrequirements.txt
 
     - name: Run tests
       shell: msys2 {0}
