@@ -2,7 +2,7 @@ name: manylinux
 
 on:
   workflow_dispatch:
-  #pull_request:
+  pull_request:
 
 jobs:
   build-sdist:
@@ -25,7 +25,6 @@ jobs:
           name: packages_sdist
           path: |
             dist/*.tar.gz
-
 
   build-linux-i686:
     name: Build Linux i686 packages
@@ -95,3 +94,19 @@ jobs:
           name: packages_linux_aarch64
           path: |
             dist/*-manylinux2014_aarch64.whl
+
+  check_artifacts:
+    needs: [build-sdist, build-linux-i686, build-x86_64, build-aarch64]
+    defaults:
+      run:
+        shell: bash
+    name: Check artifacts are correct
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/download-artifact@v2
+
+      # note wheels should be in subdirectory <upload_name>
+      - name: Check number of downloaded artifacts
+        run: |
+          .github/workflows/wheel-check.sh 12
