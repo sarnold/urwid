@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macos-latest]
+        os: [ubuntu-18.04, macos-latest]
         python-version: [3.6, 3.7, 3.8, 3.9]
 
     steps:
@@ -33,7 +33,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get -qq update
-        sudo apt-get install -y libgirepository1.0-dev gir1.2-gtk-3.0 python3-gi
+        sudo apt-get install -y python-gi python3-gi
 
     - name: Install deps with brew
       if: runner.os == 'macOS'
@@ -47,7 +47,9 @@ jobs:
 
     - name: Run tests
       run: |
-        tox -e py
+        tox
+      env:
+        PLATFORM: ${{ matrix.os }}
 
     - name: Build sdist/wheel
       run: |
