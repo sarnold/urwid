@@ -2,6 +2,6 @@
 omit =
     .tox/*
     setup.py
+    urwid/tests/*
 # do we really want coverage data for test files?
-#    urwid/tests/*
 
