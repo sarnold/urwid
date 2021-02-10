@@ -204,10 +204,10 @@ else:
         def test_coroutine_error(self):
             evl = self.evl
 
-            @asyncio.coroutine
-            def error_coro():
+            # @asyncio.coroutine is deperecated
+            async def error_coro():
                 result = 1 / 0 # Simulate error in coroutine
-                yield result
+                await result
 
             asyncio.ensure_future(error_coro())
             self.assertRaises(ZeroDivisionError, evl.run)
