@@ -16,7 +16,7 @@ matrix:
     env: TOXENV=pypy
 before_install:
   - "sudo apt-get update"
-  - "sudo apt-get install python-gi python3-gi"
+  - "sudo apt-get install python-gi python3-gi libgirepository1.0-dev"
 install:
   - "pip install tox coverage coveralls"
 script:
