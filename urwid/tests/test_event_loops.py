@@ -64,7 +64,7 @@ class EventLoopTestMixin(object):
         def exit_error():
             1/0
         handle = evl.alarm(0.01, exit_clean)
-        handle = evl.alarm(0.005, say_hello)
+        handle = evl.alarm(0.001, say_hello)
         idle_handle = evl.enter_idle(say_waiting)
         if self._expected_idle_handle is not None:
             self.assertEqual(idle_handle, 1)
