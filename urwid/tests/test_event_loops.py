@@ -63,7 +63,7 @@ class EventLoopTestMixin(object):
             raise urwid.ExitMainLoop
         def exit_error():
             1/0
-        handle = evl.alarm(0.01, exit_clean)
+        handle = evl.alarm(0.008, exit_clean)
         handle = evl.alarm(0.001, say_hello)
         idle_handle = evl.enter_idle(say_waiting)
         if self._expected_idle_handle is not None:

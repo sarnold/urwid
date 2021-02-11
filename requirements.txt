@@ -3,6 +3,6 @@ coverage
 coverage_python_version
 pytest
 pytest-cov
+trio~=0.18.0
 twisted
-trio
 PyGObject
