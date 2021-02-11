@@ -10,8 +10,6 @@ matrix:
     env: TOXENV=py38
   - python: 3.9
     env: TOXENV=py39
-  - python: pypy3
-    env: TOXENV=pypy3
 before_install:
   - "sudo apt-get update"
   - "sudo apt-get install python-gi python3-gi libgirepository1.0-dev"
